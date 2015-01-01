@@ -4,7 +4,7 @@
   "description": "wait for host/port to become available",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/mocha/bin/mocha"
   },
   "keywords": [
     "net",
@@ -12,5 +12,10 @@
     "port"
   ],
   "author": "chris",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "mocha": "^2.1.0",
+    "should": "^4.4.2",
+    "sinon": "^1.12.2"
+  }
 }
