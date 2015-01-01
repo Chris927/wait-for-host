@@ -11,8 +11,8 @@
     "host",
     "port"
   ],
-  "author": "chris",
-  "license": "ISC",
+  "author": "chris@uber5.com",
+  "license": "MIT",
   "devDependencies": {
     "mocha": "^2.1.0",
     "should": "^4.4.2",
