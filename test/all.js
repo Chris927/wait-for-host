@@ -2,7 +2,8 @@ var waitForPort = require('../index'),
     net = require('net'),
     sinon = require('sinon'),
     should = require('should'),
-    helpers = require('./helpers');
+    helpers = require('./helpers'),
+    assert = require('assert');
 
 describe('waitForPort', function() {
 
@@ -117,22 +118,49 @@ describe('waitForPort', function() {
       });
     });
 
-    it('does callback with error when run out of retries', function(done) {
-      waitForPort(host, port, { numRetries: 10, retryInterval: 50, key: 123 }, function(err) {
-        err.should.match(/out of retries/);
-        done();
+    describe('invalid options', function() {
+
+      it('fails for invalid options', function() {
+
+        (function() {
+          waitForPort(host, port, { numRetries: -1 }, function() {});
+        }).should.throw(/invalid value for option/);
+
+        (function() {
+          waitForPort(host, port, { retryInterval: -1 }, function() {});
+        }).should.throw(/invalid value for option/);
+
       });
-      clock.tick(100 * 50 + 1); // TODO: magic numbers
+
     });
 
-    it('does not call back if numRetries and/or retryInterval large enough', function(done) {
-      var err = null;
-      waitForPort(host, port, { numRetries: 100, retryInterval: 50 }, function() {
-        err = new Error('should not be called');
+    var variations = [
+      { numRetries: 1, retryInterval: 1 },
+      { numRetries: 1, retryInterval: 10000 },
+      { numRetries: 7, retryInterval: 1 },
+      { numRetries: 7, retryInterval: 6577 }
+    ];
+
+    variations.forEach(function(options) {
+
+      it('does callback with error when run out of retries, retries=' + options.numRetries + ', interval=' + options.retryInterval, function(done) {
+        waitForPort(host, port, options, function(err) {
+          err.should.match(/out of retries/);
+          done();
+        });
+        clock.tick(options.numRetries * options.retryInterval + 1);
       });
-      clock.tick(100 * 50 - 1); // TODO: magic numbers
-      done(err);
+
+      it('does not call back if numRetries and/or retryInterval large enough, retries=' + options.numRetries + ', interval=' + options.retryInterval, function(done) {
+        var err = null;
+        waitForPort(host, port, options, function() {
+          err = new Error('should not be called');
+        });
+        clock.tick(options.numRetries * options.retryInterval - 1);
+        done(err);
+      });
     });
 
   });
+
 });

@@ -12,6 +12,9 @@ module.exports = function(host, port, options, cb) {
   var retryInterval = options.retryInterval || 1000;
   var timer = null, socket = null;
 
+  if (!(retriesRemaining > 0)) throw new Error('invalid value for option "numRetries"');
+  if (!(retryInterval > 0)) throw new Error('invalid value for option "retryInterval"');
+
   function clearTimerAndDestroySocket() {
     clearTimeout(timer);
     timer = null;
