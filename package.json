@@ -6,6 +6,10 @@
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Chris927/wait-for-host.git"
+  },
   "keywords": [
     "net",
     "host",
