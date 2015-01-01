@@ -13,7 +13,6 @@ describe('waitForPort', function() {
 
   function tryToConnect(host, port, cb) {
     var client = net.createConnection(port, host, function() {
-      console.log('connected!');
       client.end();
       cb(null);
     });
@@ -47,7 +46,6 @@ describe('waitForPort', function() {
         done(); // called more than once?
       });
       server.listen(port, function() {
-        console.log('server is now listening...');
         portIsReady = true;
       });
       clock.tick(10); // TODO: magic number
@@ -66,13 +64,13 @@ describe('waitForPort', function() {
       server.listen(0 /* any port */, function() {
         var address = server.address();
         port = address.port;
-        console.log('listening on port ' + port);
+        // console.log('listening on port ' + port);
         done();
       });
     });
     after(function(done) {
       server.close(function() {
-        console.log('server closed');
+        // console.log('server closed');
         done();
       });
     });
