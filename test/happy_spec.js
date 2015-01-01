@@ -1,8 +1,8 @@
 var waitForPort = require('../index'),
     net = require('net'),
-    sinon = require('sinon');
-
-var should = require('should');
+    sinon = require('sinon'),
+    should = require('should'),
+    helpers = require('./helpers');
 
 describe('waitForPort', function() {
 
@@ -20,8 +20,15 @@ describe('waitForPort', function() {
 
   describe('when port is not open', function() {
 
-    var host = 'localhost', port = 34888; // TODO: using different port number than below, as async specs may overlap
+    var host = 'localhost', port;
     var server = null;
+
+    before(function(done) {
+      helpers.nextRandomPort(function(err, next) {
+        port = next;
+        done(err);
+      });
+    });
 
     beforeEach(function() {
       server = net.createServer();
@@ -82,7 +89,13 @@ describe('waitForPort', function() {
   });
 
   describe('retries', function() {
-    var host = 'localhost', port = 34886;
+    var host = 'localhost', port;
+    beforeEach(function(done) {
+      helpers.nextRandomPort(function(err, next) {
+        port = next;
+        done(err);
+      });
+    });
     it('fails if no server and we run out of retries', function(done) {
       waitForPort(host, port, function(err) {
         err.should.match(/out of retries/);
