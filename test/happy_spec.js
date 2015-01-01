@@ -5,6 +5,11 @@ var waitForPort = require('../index'),
 var should = require('should');
 
 describe('waitForPort', function() {
+
+  var clock;
+  before(function() { clock = sinon.useFakeTimers(); });
+  after(function() { clock.restore(); });
+
   function tryToConnect(host, port, cb) {
     var client = net.createConnection(port, host, function() {
       console.log('connected!');
@@ -16,13 +21,11 @@ describe('waitForPort', function() {
   describe('when port is not open', function() {
 
     var host = 'localhost', port = 34888; // TODO: using different port number than below, as async specs may overlap
-    var clock, server = null;
+    var server = null;
 
-    // TODO: fake timers don't work as expected, as waitForPort uses socket
-    // timeout, which seems unaffected by fake timers
-    before(function() { clock = sinon.useFakeTimers(); });
-    after(function() { clock.restore(); });
-
+    beforeEach(function() {
+      server = net.createServer();
+    });
     afterEach(function(done) {
       server.close(done);
     });
@@ -31,14 +34,15 @@ describe('waitForPort', function() {
 
       var portIsReady = false;
       waitForPort(host, port, function(err) {
+        if (err) return done(err);
         portIsReady.should.be.true;
-        done();
+        done(); // called more than once?
       });
-      server = net.createServer();
       server.listen(port, function() {
         console.log('server is now listening...');
         portIsReady = true;
       });
+      clock.tick(10); // TODO: magic number
 
     });
 
@@ -46,17 +50,19 @@ describe('waitForPort', function() {
 
   describe('when port is open already', function() {
 
-    var host = 'localhost', port = 34887;
+    var host = 'localhost', port;
     var server;
 
-    beforeEach(function(done) {
+    before(function(done) {
       server = net.createServer();
-      server.listen(port, function() {
+      server.listen(0 /* any port */, function() {
+        var address = server.address();
+        port = address.port;
         console.log('listening on port ' + port);
         done();
       });
     });
-    afterEach(function(done) {
+    after(function(done) {
       server.close(function() {
         console.log('server closed');
         done();
@@ -74,4 +80,16 @@ describe('waitForPort', function() {
       });
     });
   });
+
+  describe('retries', function() {
+    var host = 'localhost', port = 34886;
+    it('fails if no server and we run out of retries', function(done) {
+      waitForPort(host, port, function(err) {
+        err.should.match(/out of retries/);
+        done();
+      });
+      clock.tick(5000); // TODO: magic number
+    })
+  });
+
 });
