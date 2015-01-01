@@ -1,5 +1,6 @@
 var waitForPort = require('../index'),
-    net = require('net');
+    net = require('net'),
+    sinon = require('sinon');
 
 var should = require('should');
 
@@ -13,25 +14,34 @@ describe('waitForPort', function() {
   }
 
   describe('when port is not open', function() {
+
     var host = 'localhost', port = 34888; // TODO: using different port number than below, as async specs may overlap
-    var server = null;
+    var clock, server = null;
+
+    // TODO: fake timers don't work as expected, as waitForPort uses socket
+    // timeout, which seems unaffected by fake timers
+    before(function() { clock = sinon.useFakeTimers(); });
+    after(function() { clock.restore(); });
+
     afterEach(function(done) {
       server.close(done);
     });
+
     it('calls us back', function(done) {
+
       var portIsReady = false;
       waitForPort(host, port, function(err) {
         portIsReady.should.be.true;
         done();
       });
-      setTimeout(function() { // wait a little
-        server = net.createServer();
-        server.listen(port, function() {
-          console.log('server is now listening...');
-          portIsReady = true;
-        });
-      }, 100);
+      server = net.createServer();
+      server.listen(port, function() {
+        console.log('server is now listening...');
+        portIsReady = true;
+      });
+
     });
+
   });
 
   describe('when port is open already', function() {
