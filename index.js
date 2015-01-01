@@ -1,8 +1,15 @@
 var net = require('net');
 
-module.exports = function(host, port, cb) {
+module.exports = function(host, port, options, cb) {
 
-  var retriesRemaining = 10; // TODO: options
+  // allow for missing options
+  if (typeof options == "function") {
+    cb = options;
+    options = {};
+  }
+
+  var retriesRemaining = options.numRetries || 10;
+  var retryInterval = options.retryInterval || 1000;
   var timer = null, socket = null;
 
   function clearTimerAndDestroySocket() {
@@ -13,7 +20,7 @@ module.exports = function(host, port, cb) {
   }
 
   function retry() {
-    console.log('about to clear timeout and retry, port=' + port + ', retriesRemaining=' + retriesRemaining);
+    console.log('about to clear timeout and retry, port=' + port + ', retriesRemaining=' + retriesRemaining + ', key=' + options.key);
     tryToConnect();
   };
 
@@ -21,7 +28,7 @@ module.exports = function(host, port, cb) {
 
     clearTimerAndDestroySocket();
 
-    if (--retriesRemaining < 1) return cb(new Error('out of retries'));
+    if (--retriesRemaining < 0) return cb(new Error('out of retries'));
 
     socket = net.createConnection(port, host, function(err) {
       console.log('connected!');
@@ -29,12 +36,12 @@ module.exports = function(host, port, cb) {
       if (retriesRemaining > 0) cb(null);
     });
 
-    timer = setTimeout(function() { retry(); }, 100); // TODO: options
+    timer = setTimeout(function() { retry(); }, retryInterval);
 
     socket.on('error', function(err) {
       console.log('error', err);
       clearTimerAndDestroySocket();
-      setTimeout(retry, 100); // TODO: magic number
+      setTimeout(retry, retryInterval);
     });
   }
 

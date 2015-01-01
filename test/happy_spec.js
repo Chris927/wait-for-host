@@ -101,8 +101,38 @@ describe('waitForPort', function() {
         err.should.match(/out of retries/);
         done();
       });
-      clock.tick(5000); // TODO: magic number
+      clock.tick(50000000); // TODO: magic number
     })
   });
 
+  describe('retries', function() {
+
+    var host = 'localhost', port = 0;
+
+    beforeEach(function(done) {
+      helpers.nextRandomPort(function(err, next) {
+        if (err) throw new Error(err);
+        port = next;
+        done();
+      });
+    });
+
+    it('does callback with error when run out of retries', function(done) {
+      waitForPort(host, port, { numRetries: 10, retryInterval: 50, key: 123 }, function(err) {
+        err.should.match(/out of retries/);
+        done();
+      });
+      clock.tick(100 * 50 + 1); // TODO: magic numbers
+    });
+
+    it('does not call back if numRetries and/or retryInterval large enough', function(done) {
+      var err = null;
+      waitForPort(host, port, { numRetries: 100, retryInterval: 50 }, function() {
+        err = new Error('should not be called');
+      });
+      clock.tick(100 * 50 - 1); // TODO: magic numbers
+      done(err);
+    });
+
+  });
 });
