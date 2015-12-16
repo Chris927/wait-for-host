@@ -1,0 +1,14 @@
+#!/usr/bin/env node
+var waitForPort = require('../');
+
+var host = process.argv[2];
+var port = process.argv[3];
+
+if (!host) throw new Error('Host is required');
+if (!port) throw new Error('Port is required');
+
+waitForPort(host, port, {
+  numRetries: Infinity
+}, function (err) {
+  if (err) throw err;
+});

@@ -21,5 +21,8 @@
     "mocha": "^2.1.0",
     "should": "^4.4.2",
     "sinon": "^1.12.2"
+  },
+  "bin": {
+    "wait-for-port": "./bin/wait-for-port"
   }
 }
